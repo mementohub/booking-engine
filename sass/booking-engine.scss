@@ -34,6 +34,9 @@
 	&-full-width {
 		width: 100% !important;
 	}
+	&-pull-right {
+		float: right !important;
+	}
 
 	&-h3 {
 		font-weight: bold;
@@ -46,11 +49,21 @@
 	&-p {
 		margin: 0.25rem 0;
 	}
+	@media screen and (min-width: 35.5em) {
+		&-col-left {
+			padding-right: 0.5rem;
+		}
+		&-col-right {
+			padding-left: 0.5rem;
+		}
+	}
 
 
 	&-booking {
-		background: #c1d8f4;
-		background: linear-gradient(135deg, #ecf0f5 0%,#c1d8f4 100%);
+		//background: #c1d8f4;
+		//background: linear-gradient(135deg, #ecf0f5 0%, #c1d8f4 100%);
+		//background: linear-gradient(90deg, #e3ffe7 0%, #d9e7ff 100%);
+		border: 1px solid #ddd;
 		box-sizing: border-box;
 		padding: 1rem;
 		border-radius: 3px;
@@ -58,6 +71,7 @@
 		width: 100%;
 		overflow: hidden;
 		&:before {
+			z-index: 2;
 			transition: 0.2s all;
 			overflow: hidden;
 			content: "...";
@@ -70,7 +84,8 @@
 			left: 0;
 			width: 100%;
 			height: 0;
-			background: rgba(0,0,0,0.2);
+			//background: rgba(0,0,0,0.2);
+			background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 100%);
 		}
 		&.loading {
 			&:before {
@@ -82,8 +97,9 @@
 		}
 	}
 	&-search {
-		border-bottom: 1px solid #9AB0CC;
-		padding: 0 0 0.5rem;
+		padding: 0 1rem 0.5rem;
+		margin: 0 -1rem;
+		box-shadow: 0 3px 3px rgba(0,0,0,0.1);
 		.pure-g {
 			margin: 0 -0.25rem;
 		}
@@ -97,10 +113,13 @@
 		}
 	}
 	&-wrapper {
-		padding: 0.5rem 0 0;
+		padding: 1rem 0 0;
 	}
 	&-room {
-		padding: 0.25rem 0;
+		border: 1px solid #a5b6c9;
+		border-radius: 3px;
+		padding: 0.5rem 0.5rem 0;
+		margin: 0 0 1rem;
 		@media screen and (min-width: 35.5em) {
 			&-text {
 				padding: 0 0.5rem;
@@ -111,6 +130,13 @@
 
 	}
 	&-rate {
-
+		padding: 0.5rem 0;
+		border-top: 1px solid #b5cbe7;
+		&:first-child {
+			border-top: 0;
+		}
+	}
+	&-actions {
+		padding: 0.5rem 0 0;
 	}
 }

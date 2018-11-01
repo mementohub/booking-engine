@@ -13,24 +13,17 @@
 	<script src="http://localhost/booking-engine/js/booking-engine.js"></script>
 	<script>
 		$(document).ready(function() {
-			$('#booking').imementoBookingEngine({
-				hid: 1,
+			$('#booking').imementoBooking({
+				hid: 999,
 				email: 'ssr_console@imemento.com',
 				token: 'test',
+				arrival: '2018-11-01',
+				departure: '2018-11-03',
 			});
 		});
 	</script>
 </head>
 <body>
-
-<!--
-
-			// 1. auth app - DONE
-			// 2. get list of rooms for hotel
-			// 3. user selects room -> get rate plans for room (if not preloaded)
-			// 4. user selects rate -> go to booking page (prebook?)
-			// 5. user enters details -> book & show confirmation page
--->
 
 <div class="pure-menu pure-menu-horizontal">
 	<a href="#" class="pure-menu-heading">Your Logo</a>

@@ -1,11 +1,21 @@
 (function($) {
 	'use strict';
 	
+	//declare vars
+	let $elem, $elem_inner,
+		$rooms, $booking, $confirm, $search,
+		o, data, jwt, statics, rooms,
+		endpoints = {
+			auth: 'http://auth.test/api/v1/authenticate',
+			bookings: 'https://bookings.services.dev.imementohub.com/api', //'http://booking.test/api'
+		};
+	
 	$.fn.extend({
-		imementoBookingEngine: function (options) {
+		imementoBooking: function (options) {
+			$elem = $(this);
 			
 			//defaults
-			let o = $.extend({
+			o = $.extend({
 				hid: null,
 				theme: 'default',
 				min_height: '300px',
@@ -18,85 +28,113 @@
 				currency: 'RON',
 			}, options);
 			
-			//declare vars
-			let $elem = $(this), $elem_inner,
-				$rooms, $book, $confirmation, $search,
-				jwt, statics, rooms,
-				endpoints = {
-					auth: 'http://auth.test/api/v1/authenticate',
-					bookings: 'https://bookings.services.dev.imementohub.com/api', //'http://booking.test/api'
-				};
+			init();
 			
-			//toggles the loading status
-			function loading(status) {
-				$elem.toggleClass('loading', status);
-			}
-			
-			function showError(msg) {
-				alert(msg);
-			}
-			
-			//auth the hotel
-			function auth() {
-				return $.ajax({
-					method: 'POST',
-					headers: {
-						Accept: 'application/json',
-					},
-					url: endpoints.auth,
-					data: {
-						email: o.email,
-						password: o.token,
-					},
-				})
-				.fail(function (error) {
-					console.log(error);
-				})
-				.done(function (response) {
-					jwt = response;
-				})
-			}
-			
-			//get the static info: images and stuff
-			function getStatic() {
-				return $.ajax({
-					method: 'GET',
-					dataType: 'json',
-					url: endpoints.bookings + `/statics/hotels/${o.hid}`,
-					headers: {
-						Authorization: 'Bearer ' + jwt,
-					},
-				})
-				.fail(function (error) {
-					console.log(error);
-				})
-				.done(function (response) {
-					console.log(response);
-					statics = response;
-				})
-			}
-			
-			//get and show the rooms
-			function getRooms() {
-				return $.ajax({
-					method: 'GET',
-					dataType: 'json',
-					url: endpoints.bookings + `/search/hotels/1?start=${o.arrival}&stop=${o.departure}&currency=${o.currency}`,
-					headers: {
-						Authorization: 'Bearer ' + jwt,
-					},
-				})
-				.fail(function (error) {
-					console.log(error);
-				})
-				.done(function (response) {
-					console.log(response);
-					rooms = response;
-				})
-			}
-			
-			function showSearch() {
-				$search = `
+			// maintain chainability
+			return this;
+		}
+	});
+	
+	//auth & get the rooms
+	function init() {
+		$elem_inner = $('<div class="imemento-wrapper"></div>')
+		
+		$elem
+			.addClass(`imemento-booking im-theme-${o.theme} loading`)
+			.css({minHeight: o.min_height})
+			.append($elem_inner);
+		
+		//create the initial data object
+		data = {
+			hotel_id: o.hid,
+			currency: o.currency,
+			num_adults: o.adults,
+			num_children: o.children,
+			arrival_date: o.arrival,
+			departure_date: o.departure,
+		};
+		
+		showSearch();
+		
+		//chain ajax calls
+		auth()
+			.then(getStatic)
+			.then(getRooms)
+			.then(showRooms);
+	}
+	
+	//auth the hotel
+	function auth() {
+		return $.ajax({
+			method: 'POST',
+			headers: {
+				Accept: 'application/json',
+			},
+			url: endpoints.auth,
+			data: {
+				email: o.email,
+				password: o.token,
+			},
+		})
+			.fail(function (error) {
+				console.log(error);
+			})
+			.done(function (response) {
+				jwt = response;
+			})
+	}
+	
+	//get the static info: images and stuff
+	function getStatic() {
+		return $.ajax({
+			method: 'GET',
+			dataType: 'json',
+			url: endpoints.bookings + `/statics/hotels/${o.hid}`,
+			headers: {
+				Authorization: 'Bearer ' + jwt,
+			},
+		})
+		.fail(function (error) {
+			console.log(error);
+		})
+		.done(function (response) {
+			console.log(response);
+			statics = response;
+		})
+	}
+	
+	//get and show the rooms
+	function getRooms() {
+		return $.ajax({
+			method: 'GET',
+			dataType: 'json',
+			url: endpoints.bookings + `/search/hotels/${o.hid}?start=${o.arrival}&stop=${o.departure}&currency=${o.currency}`,
+			headers: {
+				Authorization: 'Bearer ' + jwt,
+			},
+		})
+			.fail(function (error) {
+				console.log(error);
+			})
+			.done(function (response) {
+				console.log(response);
+				rooms = response;
+			})
+	}
+	
+	//toggles the loading status
+	function loading(status) {
+		$elem.toggleClass('loading', status);
+	}
+	
+	//show an error message
+	function showError(msg) {
+		alert(msg);
+	}
+	
+	//show the search form
+	function showSearch() {
+		$search = `
 <div class="imemento-search">
 	<form class="pure-form pure-form-stacked">
 		<div class="pure-g">
@@ -123,32 +161,33 @@
 	</form>
 </div>
 				`;
-				
-				$elem.prepend($search);
-			}
+		
+		$elem.prepend($search);
+	}
+	
+	//shows all the rooms and rates
+	function showRooms() {
+		
+		if (! rooms.all_rooms) {
+			showError('Nu sunt camere disponibile.');
+			return;
+		}
+		
+		$rooms = $('<div class="imemento-rooms"></div>');
+		
+		//create each room
+		rooms.all_rooms.forEach(function (room) {
 			
-			function showRooms() {
-				
-				if (! rooms.all_rooms) {
-					showError('Nu sunt camere disponibile.');
-					return;
-				}
-				
-				$rooms = $('<div class="imemento-rooms"></div>');
-				
-				//create each room
-				rooms.all_rooms.forEach(function (room) {
-					
-					//get static info
-					let room_statics = statics.rooms.filter(function(sroom) {
-						return sroom.id === room.room_id;
-					});
-					
-					let img_src; //todo placeholder
-					if (room_statics.length > 0)
-						img_src = room_statics[0].media[0].url.medium;
-					
-					let $room = $(`
+			//get static info
+			let room_statics = statics.rooms.filter(function(sroom) {
+				return sroom.id === room.room_id;
+			});
+			
+			let img_src; //todo placeholder
+			if (room_statics.length > 0)
+				img_src = room_statics[0].media[0].url.medium;
+			
+			let $room = $(`
 <div class="imemento-room pure-g">
 	<div class="imemento-room-image pure-u-1 pure-u-sm-3-24">
 		<img src="${img_src}" alt="" class="pure-img imemento-full-width" />
@@ -160,53 +199,174 @@
 	<div class="imemento-rates pure-u-1"></div>
 </div>
 					`);
-					
-					//create each rate
-					room.all_prices.forEach(function (rate) {
-						let $rate = $(`
+			
+			//create each rate
+			room.all_prices.forEach(function (rate) {
+				
+				//quantity select
+				let $quantity = $('<select name="quantity" />');
+				for (let i=0; i < room.number_rooms; i++) {
+					$quantity.append(`<option value="${i+1}">${i+1}</option>`);
+				}
+				
+				let $rate = $(`
 <div class="imemento-rate pure-g">
-	<div class="pure-u-12-24 pure-u-sm-20-24">
-		${rate.rate_plan_name}
+	<div class="pure-u-12-24 pure-u-sm-18-24">
+		<span class="imemento-block">${rate.rate_plan_name}</span>
+		<span class="imemento-block">${rate.value} ${rate.currency}</span>
 	</div>
-	<div class="pure-u-12-24 pure-u-sm-4-24 imemento-text-right">
-		<span>${rate.value} ${rate.currency}</span>
-		<button type="submit" class="pure-button pure-button-success">Rezerva</button>
-	</div>
+	<form class="pure-u-12-24 pure-u-sm-6-24 imemento-text-right pure-form">
+		<input type="hidden" name="room_id" value="${room.room_id}">
+		<input type="hidden" name="rate_id" value="${rate.rate_plan_id}">
+		<input type="hidden" name="price" value="${rate.value}">
+		<button type="submit" class="pure-button pure-button-success imemento-book-button">Rezerva</button>
+	</form>
 </div>
 						`);
-						$room.children('.imemento-rates').append($rate);
-					});
-					
-					$rooms.append($room);
-				});
 				
-				$elem_inner.html($rooms);
-				loading(false);
-			}
+				$rate.find('.pure-form').prepend($quantity);
+				$room.children('.imemento-rates').append($rate);
+			});
 			
-			//auth & get the rooms
-			function init() {
-				$elem_inner = $('<div class="imemento-wrapper"></div>')
-				
-				$elem
-					.addClass(`imemento-booking im-theme-${o.theme} loading`)
-					.css({minHeight: o.min_height})
-					.append($elem_inner);
-				
-				showSearch();
-				
-				//chain ajax calls
-				auth()
-					.then(getStatic)
-					.then(getRooms)
-					.then(showRooms);
-			}
-			
-			init();
-			
-			// maintain chainability
-			return this;
-		}
+			$rooms.append($room);
+		});
+		
+		$elem_inner.html($rooms);
+		loading(false);
+	}
+	
+	//shows the booking form
+	function showBooking(d) {
+		
+		//calculate total price and add the room info to main data
+		data.total_price = d.price * parseInt(d.quantity);
+		data.room_types = [{
+			id: d.room_id,
+			rate_plan_id: d.rate_id,
+			quantity: d.quantity,
+			total_price: data.total_price,
+			currency: data.currency,
+			services: [],
+		}];
+		
+		$booking = `
+<div class="imemento-book">
+	<form class="pure-form pure-form-stacked">
+		<div class="pure-g">
+            <div class="pure-u-1 pure-u-md-12-24 imemento-col-left">
+                <label>Prenume *</label>
+                <input class="pure-u-1" type="text" name="first_name" required>
+            </div>
+            <div class="pure-u-1 pure-u-md-12-24 imemento-col-right">
+                <label>Nume *</label>
+                <input class="pure-u-1" type="text" name="last_name" required>
+            </div>
+            <div class="pure-u-1 pure-u-md-12-24 imemento-col-left">
+                <label>Email *</label>
+                <input class="pure-u-1" type="email" name="email" required>
+            </div>
+            <div class="pure-u-1 pure-u-md-12-24 imemento-col-right">
+                <label>Telefon</label>
+                <input class="pure-u-1" type="text" name="phone">
+            </div>
+            <div class="pure-u-1 pure-u-md-12-24 imemento-col-left">
+                <label>Adresa</label>
+                <input class="pure-u-1" type="text" name="address" required>
+            </div>
+            <div class="pure-u-1 pure-u-md-12-24 imemento-col-right">
+                <label>Localitate</label>
+                <input class="pure-u-1" type="text" name="location" required>
+            </div>
+            <div class="pure-u-1">
+                <label>Observatii</label>
+                <textarea class="pure-u-1" name="observations"></textarea>
+            </div>
+		</div>
+		<div class="imemento-actions">
+			<a class="pure-button pure-button imemento-back-button">Inapoi</a>
+			<button type="submit" class="pure-button pure-button-success imemento-confirm-button imemento-pull-right">Rezerva</button>
+		</div>
+	</form>
+</div>
+				`;
+		
+		$elem_inner.html($booking);
+	}
+	
+	function prebook() {
+		return $.ajax({
+			method: 'POST',
+			data: data,
+			dataType: 'json',
+			url: endpoints.bookings + `/reservations/prebook`,
+			headers: {
+				Authorization: 'Bearer ' + jwt,
+			},
+		})
+			.fail(function (error) {
+				console.log(error);
+			})
+			.done(function (response) {
+				console.log(response);
+				data.id = response.id;
+			})
+	}
+	
+	function book(data) {
+		return $.ajax({
+			method: 'PUT',
+			data: data,
+			dataType: 'json',
+			url: endpoints.bookings + `/reservations/${data.id}/book`,
+			headers: {
+				Authorization: 'Bearer ' + jwt,
+			},
+		})
+		.fail(function (error) {
+			console.log(error);
+		})
+		.done(function (response) {
+			console.log(response);
+			loading(false);
+		})
+	}
+	
+	function showConfirm() {
+		$confirm = `
+		
+		`;
+		
+		$elem_inner.html($confirm);
+	}
+	
+	function parseToKeyValue(d) {
+		return d.reduce(function(obj, item) {
+			obj[item.name] = item.value;
+			return obj;
+		}, {});
+	}
+	
+	//when the user clicks on the book button for a room-rate combination
+	$(document).on('click', '.imemento-book-button', function(e) {
+		let d = $(this).closest('form').serializeArray();
+		showBooking(parseToKeyValue(d));
+	});
+	
+	//go back to rooms
+	$(document).on('click', '.imemento-back-button', function(e) {
+		showRooms();
+	});
+	
+	//make the booking and show a confirmation page
+	$(document).on('click', '.imemento-confirm-button', function(e) {
+		e.preventDefault();
+		loading(true);
+		
+		let d = parseToKeyValue($(this).closest('form').serializeArray());
+		
+		prebook()
+			.then(book)
+			.then(showConfirm);
 	});
 	
 }(jQuery));
