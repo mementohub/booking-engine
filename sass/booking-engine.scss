@@ -28,16 +28,23 @@
 	&-block {
 		display: block !important;
 	}
+	&-text-right {
+		text-align: right !important;
+	}
+	&-full-width {
+		width: 100% !important;
+	}
+
 	&-h3 {
 		font-weight: bold;
 		font-size: 1.2rem;
 		letter-spacing: normal;
 		text-transform: none;
-		margin: 0 0 0.5rem;
+		margin: 0 0 0.25rem;
 		padding: 0.25rem 0 0;
 	}
 	&-p {
-		margin: 0.5rem 0;
+		margin: 0.25rem 0;
 	}
 
 
@@ -70,6 +77,9 @@
 				height: 100%;
 			}
 		}
+		div {
+			box-sizing: border-box;
+		}
 	}
 	&-search {
 		border-bottom: 1px solid #9AB0CC;
@@ -91,12 +101,16 @@
 	}
 	&-room {
 		padding: 0.25rem 0;
-		/*&-image img {
-			display: block;
-			width: 100%;
-		}*/
-		&-text {
-
+		@media screen and (min-width: 35.5em) {
+			&-text {
+				padding: 0 0.5rem;
+			}
 		}
+	}
+	&-rates {
+
+	}
+	&-rate {
+
 	}
 }

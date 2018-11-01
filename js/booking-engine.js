@@ -138,6 +138,8 @@
 				
 				//create each room
 				rooms.all_rooms.forEach(function (room) {
+					
+					//get static info
 					let room_statics = statics.rooms.filter(function(sroom) {
 						return sroom.id === room.room_id;
 					});
@@ -149,7 +151,7 @@
 					let $room = $(`
 <div class="imemento-room pure-g">
 	<div class="imemento-room-image pure-u-1 pure-u-sm-3-24">
-		<img src="${img_src}" alt="" class="pure-img" />
+		<img src="${img_src}" alt="" class="pure-img imemento-full-width" />
 	</div>
 	<div class="imemento-room-text pure-u-1 pure-u-sm-21-24">
 		<h3 class="imemento-h3">${room.room_name}</h3>
@@ -162,9 +164,14 @@
 					//create each rate
 					room.all_prices.forEach(function (rate) {
 						let $rate = $(`
-<div class="imemento-rate">
-	${rate.rate_plan_name}
-	<button type="submit" class="pure-button pure-button-success">Rezerva</button>
+<div class="imemento-rate pure-g">
+	<div class="pure-u-12-24 pure-u-sm-20-24">
+		${rate.rate_plan_name}
+	</div>
+	<div class="pure-u-12-24 pure-u-sm-4-24 imemento-text-right">
+		<span>${rate.value} ${rate.currency}</span>
+		<button type="submit" class="pure-button pure-button-success">Rezerva</button>
+	</div>
 </div>
 						`);
 						$room.children('.imemento-rates').append($rate);
