@@ -6,8 +6,8 @@
 		$rooms, $booking, $confirm, $search,
 		o, data, jwt, statics, rooms,
 		endpoints = {
-			auth: 'http://auth.test/api/v1/authenticate',
-			bookings: 'https://bookings.services.dev.imementohub.com/api', //'http://booking.test/api'
+			auth: 'https://auth.staging.imementohub.com/api/v1/authenticate',
+			bookings: 'https://bookings.services.staging.imementohub.com/api', //'http://booking.test/api'
 		};
 	
 	$.fn.extend({
@@ -21,8 +21,9 @@
 				min_height: '300px',
 				email: null,
 				token: null,
-				adults: 2,
+				adults: 1,
 				children: 0,
+				infants: 0,
 				arrival: '2018-11-28',
 				departure: '2018-11-30',
 				currency: 'RON',
@@ -63,6 +64,14 @@
 			.then(showRooms);
 	}
 	
+	//update new search params and show the new rooms
+	function search(form_data) {
+		o = $.extend(o, form_data);
+		
+		getRooms()
+			.then(showRooms);
+	}
+	
 	//auth the hotel
 	function auth() {
 		return $.ajax({
@@ -98,13 +107,14 @@
 			console.log(error);
 		})
 		.done(function (response) {
-			console.log(response);
+			//console.log(response);
 			statics = response;
 		})
 	}
 	
 	//get and show the rooms
 	function getRooms() {
+		
 		return $.ajax({
 			method: 'GET',
 			dataType: 'json',
@@ -117,7 +127,7 @@
 				console.log(error);
 			})
 			.done(function (response) {
-				console.log(response);
+				//console.log(response);
 				rooms = response;
 			})
 	}
@@ -155,7 +165,11 @@
                 <input class="pure-u-1" type="text" value="${o.children}" name="children" required>
             </div>
             <div class="pure-u-1 pure-u-md-3-24">
-				<button type="submit" class="pure-button pure-button-primary imemento-block">Cauta</button>
+                <label>Infanti</label>
+                <input class="pure-u-1" type="text" value="${o.infants}" name="infants" required>
+            </div>
+            <div class="pure-u-1 pure-u-md-3-24">
+				<button type="submit" class="pure-button pure-button-primary imemento-block imemento-search-button">Cauta</button>
             </div>
         </div>
 	</form>
@@ -232,6 +246,7 @@
 		});
 		
 		$elem_inner.html($rooms);
+		$elem_inner.append('<p class="imemento-help-text">Toate preturile sunt per noapte per camera.</p>');
 		loading(false);
 	}
 	
@@ -293,58 +308,79 @@
 		$elem_inner.html($booking);
 	}
 	
+	//make the prebook call and get the booking id
 	function prebook() {
 		return $.ajax({
 			method: 'POST',
-			data: data,
-			dataType: 'json',
+			data: JSON.stringify(data), //ignores empty arrays otherwise
+			contentType: 'application/json',
 			url: endpoints.bookings + `/reservations/prebook`,
 			headers: {
 				Authorization: 'Bearer ' + jwt,
-			},
-		})
-			.fail(function (error) {
-				console.log(error);
-			})
-			.done(function (response) {
-				console.log(response);
-				data.id = response.id;
-			})
-	}
-	
-	function book(data) {
-		return $.ajax({
-			method: 'PUT',
-			data: data,
-			dataType: 'json',
-			url: endpoints.bookings + `/reservations/${data.id}/book`,
-			headers: {
-				Authorization: 'Bearer ' + jwt,
+				Accept: 'application/json',
 			},
 		})
 		.fail(function (error) {
 			console.log(error);
 		})
 		.done(function (response) {
-			console.log(response);
+			//console.log(response);
+			data.id = response.id;
+		})
+	}
+	
+	//make the actual booking
+	function book() {
+		return $.ajax({
+			method: 'PUT',
+			data: JSON.stringify(data),
+			contentType: 'application/json',
+			url: endpoints.bookings + `/reservations/${data.id}/book`,
+			headers: {
+				Authorization: 'Bearer ' + jwt,
+				Accept: 'application/json',
+			},
+		})
+		.fail(function (error) {
+			console.log(error);
+		})
+		.done(function (response) {
+			//console.log(response);
 			loading(false);
 		})
 	}
 	
+	//show the final confirmation page
 	function showConfirm() {
 		$confirm = `
-		
+<div class="imemento-confirm">
+	<h1>:)</h1>
+	<h3>Rezervarea a fost efectuata.</h3>
+	<p>O sa primiti un email cu informatiile complete in cel mai scurt timp.</p>
+</div>
 		`;
 		
 		$elem_inner.html($confirm);
 	}
 	
+	//parse from serializeArray to key => value
 	function parseToKeyValue(d) {
 		return d.reduce(function(obj, item) {
 			obj[item.name] = item.value;
 			return obj;
 		}, {});
 	}
+	
+	
+	
+	//search rooms
+	$(document).on('click', '.imemento-search-button', function(e) {
+		e.preventDefault();
+		loading(true);
+		
+		let d = $(this).closest('form').serializeArray();
+		search(parseToKeyValue(d));
+	});
 	
 	//when the user clicks on the book button for a room-rate combination
 	$(document).on('click', '.imemento-book-button', function(e) {
@@ -363,6 +399,20 @@
 		loading(true);
 		
 		let d = parseToKeyValue($(this).closest('form').serializeArray());
+		
+		//get customer info
+		data.customer = {
+			name: d.first_name +' '+ d.last_name,
+			email: d.email,
+			phone: d.phone,
+			country: 'RO',
+			city: d.location,
+			address: d.address,
+			observations: d.observations,
+		};
+		
+		//empty payment info
+		data.payment = [];
 		
 		prebook()
 			.then(book)
