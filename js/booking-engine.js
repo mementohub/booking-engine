@@ -150,23 +150,23 @@
 		<div class="pure-g">
             <div class="pure-u-1 pure-u-md-6-24">
                 <label>Sosire</label>
-                <input class="pure-u-1" type="text" value="${o.arrival}" name="arrival" required>
+                <input class="pure-u-1" type="date" value="${o.arrival}" name="arrival" required>
             </div>
             <div class="pure-u-1 pure-u-md-6-24">
                 <label>Plecare</label>
-                <input class="pure-u-1" type="text" value="${o.departure}" name="departure" required>
+                <input class="pure-u-1" type="date" value="${o.departure}" name="departure" required>
             </div>
             <div class="pure-u-1 pure-u-md-3-24">
                 <label>Adulti</label>
-                <input class="pure-u-1" type="text" value="${o.adults}" name="adults" required>
+                <input class="pure-u-1" type="number" value="${o.adults}" name="adults" required>
             </div>
             <div class="pure-u-1 pure-u-md-3-24">
                 <label>Copii</label>
-                <input class="pure-u-1" type="text" value="${o.children}" name="children" required>
+                <input class="pure-u-1" type="number" value="${o.children}" name="children" required>
             </div>
             <div class="pure-u-1 pure-u-md-3-24">
                 <label>Infanti</label>
-                <input class="pure-u-1" type="text" value="${o.infants}" name="infants" required>
+                <input class="pure-u-1" type="number" value="${o.infants}" name="infants" required>
             </div>
             <div class="pure-u-1 pure-u-md-3-24">
 				<button type="submit" class="pure-button pure-button-primary imemento-block imemento-search-button">Cauta</button>

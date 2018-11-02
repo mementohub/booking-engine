@@ -111,6 +111,10 @@
 			position: relative;
 			padding: 0 0.25rem;
 		}
+		input[type="date"] {
+			height: 36px;
+			padding: 0.3rem 0.6rem !important;
+		}
 		.pure-button {
 			width: 100%;
 			margin: 1.7rem 0 0.25rem;
