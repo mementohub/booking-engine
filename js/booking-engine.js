@@ -255,7 +255,7 @@
 				`);
 				
 				if (selected === true) {
-					$rate.find('.pure-form').append(`<span>Numar camere: ${quantity}</span>`);
+					$rate.find('.pure-form').append(`<br><span class="imemento-block">Numar camere: ${quantity}</span>`);
 				} else {
 					$rate.find('.pure-form').append($quantity);
 					$rate.find('.pure-form').append('<button type="submit" class="pure-button pure-button-success imemento-book-button">Rezerva</button>');
