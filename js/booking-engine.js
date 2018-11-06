@@ -51,6 +51,7 @@
 			currency: o.currency,
 			num_adults: o.adults,
 			num_children: o.children,
+			num_infants: o.infants,
 			arrival_date: o.arrival,
 			departure_date: o.departure,
 		};
@@ -67,6 +68,14 @@
 	//update new search params and show the new rooms
 	function search(form_data) {
 		o = $.extend(o, form_data);
+		
+		data = $.extend(o, {
+			num_adults: o.adults,
+			num_children: o.children,
+			num_infants: o.infants,
+			arrival_date: o.arrival,
+			departure_date: o.departure,
+		});
 		
 		getRooms()
 			.then(showRooms);
@@ -114,7 +123,6 @@
 	
 	//get and show the rooms
 	function getRooms() {
-		
 		return $.ajax({
 			method: 'GET',
 			dataType: 'json',
@@ -123,13 +131,13 @@
 				Authorization: 'Bearer ' + jwt,
 			},
 		})
-			.fail(function (error) {
-				console.log(error);
-			})
-			.done(function (response) {
-				//console.log(response);
-				rooms = response;
-			})
+		.fail(function (error) {
+			console.log(error);
+		})
+		.done(function (response) {
+			//console.log(response);
+			rooms = response;
+		})
 	}
 	
 	//toggles the loading status
@@ -180,10 +188,11 @@
 	}
 	
 	//shows all the rooms and rates
-	function showRooms() {
+	function showRooms(selected, room_id, rate_id, quantity) {
 		
 		if (! rooms.all_rooms) {
 			showError('Nu sunt camere disponibile.');
+			loading(false);
 			return;
 		}
 		
@@ -191,6 +200,10 @@
 		
 		//create each room
 		rooms.all_rooms.forEach(function (room) {
+			
+			//if we want a specific room
+			if (selected === true && (room_id !== room.room_id))
+				return;
 			
 			//get static info
 			let room_statics = statics.rooms.filter(function(sroom) {
@@ -212,10 +225,14 @@
 	</div>
 	<div class="imemento-rates pure-u-1"></div>
 </div>
-					`);
+			`);
 			
 			//create each rate
 			room.all_prices.forEach(function (rate) {
+				
+				//if we want a specific rate
+				if (selected === true && (rate_id !== rate.rate_plan_id))
+					return;
 				
 				//quantity select
 				let $quantity = $('<select name="quantity" />');
@@ -233,21 +250,30 @@
 		<input type="hidden" name="room_id" value="${room.room_id}">
 		<input type="hidden" name="rate_id" value="${rate.rate_plan_id}">
 		<input type="hidden" name="price" value="${rate.value}">
-		<button type="submit" class="pure-button pure-button-success imemento-book-button">Rezerva</button>
 	</form>
 </div>
-						`);
+				`);
 				
-				$rate.find('.pure-form').prepend($quantity);
+				if (selected === true) {
+					$rate.find('.pure-form').append(`<span>Numar camere: ${quantity}</span>`);
+				} else {
+					$rate.find('.pure-form').append($quantity);
+					$rate.find('.pure-form').append('<button type="submit" class="pure-button pure-button-success imemento-book-button">Rezerva</button>');
+				}
 				$room.children('.imemento-rates').append($rate);
 			});
 			
 			$rooms.append($room);
 		});
 		
-		$elem_inner.html($rooms);
-		$elem_inner.append('<p class="imemento-help-text">Toate preturile sunt per noapte per camera.</p>');
-		loading(false);
+		//if one room or all
+		if (selected === true) {
+			$elem_inner.prepend($rooms);
+		} else {
+			$elem_inner.html($rooms);
+			$elem_inner.append('<p class="imemento-help-text">Preturile afisate sunt pentru toata durata.</p>');
+			loading(false);
+		}
 	}
 	
 	//shows the booking form
@@ -297,15 +323,24 @@
                 <textarea class="pure-u-1" name="observations"></textarea>
             </div>
 		</div>
+		
+		<div class="imemento-total imemento-text-right">
+			<strong class="imemento-block">Nopti: ${daysBetween(o.arrival, o.departure)}</strong>
+			<strong class="imemento-block">Pret total: ${data.total_price} ${data.currency}</strong>
+		</div>
+		
 		<div class="imemento-actions">
 			<a class="pure-button pure-button imemento-back-button">Inapoi</a>
 			<button type="submit" class="pure-button pure-button-success imemento-confirm-button imemento-pull-right">Rezerva</button>
 		</div>
 	</form>
 </div>
-				`;
+		`;
 		
 		$elem_inner.html($booking);
+		
+		//show selected room and rate
+		showRooms(true, parseInt(d.room_id), parseInt(d.rate_id), parseInt(d.quantity));
 	}
 	
 	//make the prebook call and get the booking id
@@ -371,6 +406,15 @@
 		}, {});
 	}
 	
+	function treatAsUTC(date) {
+		let result = new Date(date);
+		result.setMinutes(result.getMinutes() - result.getTimezoneOffset());
+		return result;
+	}
+	function daysBetween(start_date, end_date) {
+		let millisecondsPerDay = 24 * 60 * 60 * 1000;
+		return (treatAsUTC(end_date) - treatAsUTC(start_date)) / millisecondsPerDay;
+	}
 	
 	
 	//search rooms

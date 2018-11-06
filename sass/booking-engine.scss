@@ -143,9 +143,12 @@
 		&:first-child {
 			border-top: 0;
 		}
+		.imemento-book-button {
+			margin-left: 0.25rem;
+		}
 	}
 	&-actions {
-		padding: 0.5rem 0 0;
+		//padding: 0.5rem 0 0;
 	}
 	&-confirm {
 		text-align: center;
@@ -154,5 +157,13 @@
 	&-help-text {
 		font-size: 0.8rem;
 		margin: 0;
+	}
+	&-total {
+		font-size: 1rem;
+		font-weight: bold;
+		border-top: 1px solid #ddd;
+		border-bottom: 1px solid #ddd;
+		margin: 0.5rem 0;
+		padding: 0.5rem 0;
 	}
 }
